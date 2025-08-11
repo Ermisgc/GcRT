@@ -1,20 +1,18 @@
 *
 
-models/*.onnx
-
-!benchmark/*
+!benchmark/
 
 !.gitignore
 
-!example/*
+!example/
 
-!include/*
+!include/
 
-!markdown_imgs/*
+!markdown_imgs/
 
-!src/*
+!src/
 
-!test/*
+!test/
 
 !api.json
 

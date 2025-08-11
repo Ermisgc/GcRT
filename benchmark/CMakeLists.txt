@@ -1,0 +1,4 @@
+add_executable(sumarray sumarray.cu)
+target_link_libraries(sumarray gcrt)
+add_executable(unit_test_for_gmp unit_test_for_gmp.cu)
+target_link_libraries(unit_test_for_gmp gcrt)
