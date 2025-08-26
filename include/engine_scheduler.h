@@ -4,48 +4,37 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <unordered_map>
+#include "inference_meta.h"
 
 namespace GcRT{
-    class InferenceRequest;
-    class Pipeline;
-    class ModelManager;
+    class Engine;
+    class PipelineManager;
 
-    struct ModelImportConfig{
-        std::vector<std::pair<int, int>> batch_args;
-        const std::string model_path;
-    };
+    class Scheduler{
+        std::unordered_map<std::string, std::shared_ptr<Engine>> _engines;
+        std::thread _worker_thread;
+        std::atomic<bool> _destroying;
 
-    struct IExecutionContextMeta{
-        int batch_size;
-        nvinfer1::IExecutionContext * ec;
-    };
-
-    struct IExecutionContextMetaCompare{
-        bool operator()(const IExecutionContextMeta & a, const IExecutionContextMeta & b){
-            return a.batch_size > b.batch_size;
-        }
-    };
-
-    struct EngineMeta{
-        nvinfer1::ICudaEngine * engine;
-        std::mutex eng_mtx;
-        std::multiset<IExecutionContextMeta> ctx_meta_set;
-    };
-
-    class EngineScheduler{
-        std::map<std::string, moodycamel::ConcurrentQueue<InferenceRequest>> _req_list;
-        std::map<std::string, EngineMeta> _engine_meta_list;        
-        std::thread _sched_thread;
-        std::atomic<bool> _stop_flag = false;
+        PipelineManager * _pipeline_manager;
 
     public:
-        void submit(InferenceRequest && req);
+        Scheduler(PipelineManager * manager);
+        ~Scheduler();
 
-        void load_engine(const std::string & model_name, nvinfer1::ICudaEngine * engine);
+        bool addEngine(const std::string & engine_id, const std::string & model_path, const std::vector<int> & batch_sizes = {1, 2, 4, 8});
 
-        void load_engine(const std::string & model_id, const ModelImportConfig & config);
+        bool removeEngine(const std::string & engine_id);;
 
+        void submitInference(const std::string & engine_id, const Request * req);
+
+        void submitManagement(ManagementOp op, const std::string & engine_id, const std::string & model_path, std::function<void(bool)> callback);
+
+        void start(); 
+
+        void stop();
+    
     private:
-        void work();
+        void worker();  //工作线程
     };
 }

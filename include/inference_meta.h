@@ -84,6 +84,18 @@ namespace GcRT{
         void * user_data;
     };  
 
+    enum class RequestType{
+        INFERENCE,
+        MANAGEMENT
+    };
+
+    enum class ManagementOp{
+        LOAD_MODEL,
+        UNLOAD_MODEL,
+        SWITCH_MODEL,
+        UPDATE_CONFIG
+    };
+
     void from_json(const json& j, ModelConfig & config){
         j.at("name").get_to(config.name);
         j.at("version").get_to(config.version);

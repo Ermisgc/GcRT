@@ -11,21 +11,25 @@ namespace GcRT{
 
     class InferenceHandle;
     class InferenceRequest;
-    class EngineScheduler;
+    class Scheduler;
     class GPUMemoryPool;   //在memory/gpu_memory_pool.h中实现
-    class PinnedMemoryPool;
+    class PinnedMemoryPool;  
     class HttpServer;
     class HttpSession;
     class PipelineManager;
+    class ModelImportConfig;
+    class ModelSwitchOption;
     
     class GcRT{
     public:
         static GcRT & getInstance();
 
         //管理端接口
-        bool loadModel(const std::string & model_id, const ModelImportConfig & config);
+        bool loadModel(const std::string & model_id, const std::string & model_path);
 
         bool unloadModel(const std::string & model_id);
+
+        // bool
 
         //客户端提交推理任务，基于future/promise返回异步推理结果
         void submit(const InferenceRequest & req);
@@ -36,9 +40,7 @@ namespace GcRT{
         GcRT();
 
         std::unique_ptr<HttpServer> _server;
-        std::unique_ptr<EngineScheduler> _engine_scheduler;
-        std::unique_ptr<GPUMemoryPool> _gpu_memory_pool;
-        std::unique_ptr<PinnedMemoryPool> _pinned_memory_pool;
+        std::unique_ptr<Scheduler> _engine_scheduler;
         std::unique_ptr<PipelineManager> _pipeline_manager;
     };
 
