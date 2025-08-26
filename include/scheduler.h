@@ -14,21 +14,24 @@ namespace GcRT{
     class Scheduler{
         std::unordered_map<std::string, std::shared_ptr<Engine>> _engines;
         std::thread _worker_thread;
-        std::atomic<bool> _destroying;
+        std::atomic<bool> _running{false};
+        std::mutex _mtx;
+        std::condition_variable _queue_cv;
+        std::shared_ptr<PipelineManager> _pipeline_manager;
 
-        PipelineManager * _pipeline_manager;
+        moodycamel::ConcurrentQueue<ManagementRequest *> _request_queue;
 
     public:
-        Scheduler(PipelineManager * manager);
+        Scheduler(std::shared_ptr<PipelineManager> manager);
         ~Scheduler();
 
         bool addEngine(const std::string & engine_id, const std::string & model_path, const std::vector<int> & batch_sizes = {1, 2, 4, 8});
 
         bool removeEngine(const std::string & engine_id);;
 
-        void submitInference(const std::string & engine_id, const Request * req);
+        void submitInference(const std::string & engine_id, Request * req);
 
-        void submitManagement(ManagementOp op, const std::string & engine_id, const std::string & model_path, std::function<void(bool)> callback);
+        void submitManagement(ManagementRequest * mr);
 
         void start(); 
 
@@ -36,5 +39,7 @@ namespace GcRT{
     
     private:
         void worker();  //工作线程
+
+        void handleManagementRequest(ManagementRequest *);
     };
 }

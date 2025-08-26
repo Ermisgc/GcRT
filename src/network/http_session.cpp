@@ -1,8 +1,8 @@
-#include "http_session.h"
+#include "network/http_session.h"
 #include <boost/asio/dispatch.hpp>
 #include "network/json.hpp"
 #include <iostream>
-#include "inference_mata.h"
+#include "inference_meta.h"
 #define MAX_BUFFER_SIZE 1024
 
 namespace GcRT{
@@ -80,9 +80,8 @@ namespace GcRT{
             //解析json
             auto body = _req.body();
             auto json = nlohmann::json::parse(body);
-            InferenceReq ir;
+            Request ir;
             json.get_to(ir);
-            
 
         } catch (const std::exception & e){
             std::cerr << "Catch a exception in handle_infernce: " << e.what() << std::endl;

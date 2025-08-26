@@ -45,5 +45,4 @@ void BuildLogger::handleCudaError(cudaError_t && err) noexcept{
     handleCudaError(err);
 }
 
-
 }

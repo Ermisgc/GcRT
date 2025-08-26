@@ -1,30 +1,24 @@
 #include "gcrt.h"
 #include <boost/asio.hpp>
 #include "network/http_server.h"
+#include "scheduler.h"
+#include "pipeline_manager.h"
 
 namespace GcRT{
     namespace asio = boost::asio;
 
     GcRT::GcRT() {
+        _pipeline_manager = std::make_shared<PipelineManager>();
+        _engine_scheduler = std::make_unique<Scheduler>(_pipeline_manager);
         _server = std::make_unique<HttpServer>();
-        _engine_scheduler = std::make_unique<EngineScheduler>();
     }
 
     void GcRT::run(){
         _server->run();
     }
 
-    //submit由HttpSession调用
-    void GcRT::submit(const InferenceRequest & req){
-
-    }
-
-    bool loadModel(const std::string & model_id, const ModelImportConfig & config){
-        _engine_scheduler->loadModel();
-    }
-
-    bool unloadModel(const std::string & model_id){
-        
+    void GcRT::addEngine(const std::string & engine_id, const std::string & engine_path, const std::vector<int> & batch_sizes){
+        _engine_scheduler->addEngine(engine_id, engine_path, batch_sizes);
     }
 
     GcRT & GcRT::getInstance(){

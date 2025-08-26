@@ -11,9 +11,7 @@ namespace GcRT{
             createContexts(max_batch_size);
             max_batch_size /= 2;
         }
-        
     }
-
 
     Engine::~Engine(){
         while(_ctx_count.load() > 0){

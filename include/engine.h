@@ -1,5 +1,5 @@
 #include <NvInfer.h>
-#include "loggers.h"
+#include "logger/loggers.h"
 #include "data_structure/concurrentqueue.h"
 #include "inference_meta.h"
 
@@ -15,6 +15,7 @@ namespace GcRT{
         moodycamel::ConcurrentQueue<Request *> _req_list;
         std::atomic<int> _req_size; 
         std::atomic<int> _ctx_count;
+        std::atomic<bool> _switching{false};  //用于动态热切换
         std::mutex _mtx;
         std::condition_variable _ret_cv;
         int _max_batch_size;

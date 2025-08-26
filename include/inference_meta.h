@@ -96,6 +96,12 @@ namespace GcRT{
         UPDATE_CONFIG
     };
 
+    struct ManagementRequest{
+        ManagementOp op;
+        std::string model_id;
+        std::string model_path;
+    };
+
     void from_json(const json& j, ModelConfig & config){
         j.at("name").get_to(config.name);
         j.at("version").get_to(config.version);
