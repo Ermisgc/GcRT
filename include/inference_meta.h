@@ -62,7 +62,10 @@ namespace GcRT{
         std::vector<std::string> output_names; 
     };
 
-    //提取出的最纯粹的推理请求结构体
+    //一个流水线任务的元数据
+    typedef void (*Callback)(cudaStream_t, cudaError_t, void *);
+
+    //提取出的最核心的推理请求结构体
     struct InferenceReq{
         //输入和输出host指针
         std::vector<void *> h_input_buffer;

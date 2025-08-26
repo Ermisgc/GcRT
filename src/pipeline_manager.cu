@@ -30,7 +30,7 @@ namespace GcRT{
         //这里用了unique_ptr，不需要手动析构
     }
 
-    void PipelineManager::submit(std::vector<InferenceReq> & requests, ExecutionContextMeta * context_meta){
+    void PipelineManager::submit(std::vector<InferenceReq *> & requests, ExecutionContextMeta * context_meta){
         if(requests.empty()){
             return;
         }
@@ -41,7 +41,7 @@ namespace GcRT{
         if(!selected_pipeline){
             //没有合适的Pipeline，处理错误
             for(auto & req: requests){
-                req.call_back(nullptr, cudaErrorInvalidValue, req.user_data);
+                req->call_back(nullptr, cudaErrorInvalidValue, req->user_data);
             }
             return;
         }
@@ -62,7 +62,7 @@ namespace GcRT{
     }
 
 
-    Pipeline * PipelineManager::selectPipeline(const std::vector<InferenceReq> & requests){
+    Pipeline * PipelineManager::selectPipeline(const std::vector<InferenceReq *> & requests){
         int request_priority = _priority_mapper(requests[0]);
         int target_pipeline_priority = mapRequestPriorityToPipeline(request_priority);
 
@@ -112,7 +112,7 @@ namespace GcRT{
         return loads;
     }
 
-    void PipelineManager::setPriorityMapper(std::function<int(const InferenceReq &)> priority_mapper){
+    void PipelineManager::setPriorityMapper(std::function<int(const InferenceReq *)> priority_mapper){
         _priority_mapper = priority_mapper;
     }
 

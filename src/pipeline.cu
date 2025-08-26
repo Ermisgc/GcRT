@@ -10,7 +10,7 @@ namespace GcRT{
         cudaStreamDestroy(_stream);
     }
 
-    void Pipeline::submit(std::vector<InferenceReq> & requests, ExecutionContextMeta * context_meta){
+    void Pipeline::submit(std::vector<InferenceReq *> & requests, ExecutionContextMeta * context_meta){
         auto batch_ctx = std::make_shared<BatchContext>();
         batch_ctx->requests = std::move(requests);
         batch_ctx->context_meta = context_meta;
@@ -52,8 +52,8 @@ namespace GcRT{
         for(auto & req: batch_ctx->requests){
             for(int i = 0;i < batch_ctx->context_meta->nb_input; ++i){
                 cudaMemcpyAsync(static_cast<char *>(meta->input_ptrs[i]) + batch_count * meta->input_sizes[i] / batch_size, 
-                                req.h_input_buffer[i], 
-                                req.input_sizes[i], 
+                                req->h_input_buffer[i], 
+                                req->input_sizes[i], 
                                 cudaMemcpyHostToDevice, 
                                 _stream);
             }
@@ -106,10 +106,10 @@ namespace GcRT{
             //将数据拷贝回主机
             for(int i = 0;i < batch_ctx->requests.size(); ++i){
                 auto & req = batch_ctx->requests[i];
-                for(int j = 0;j < req.h_output_buffer.size(); ++j){
-                    cudaMemcpyAsync(req.h_output_buffer[j], 
+                for(int j = 0;j < req->h_output_buffer.size(); ++j){
+                    cudaMemcpyAsync(req->h_output_buffer[j], 
                                     static_cast<char *>(meta->output_ptrs[j]) + i * meta->output_sizes[j] / batch_size, 
-                                    req.output_sizes[j], 
+                                    req->output_sizes[j], 
                                     cudaMemcpyDeviceToHost, 
                                     stream);
                 }
@@ -136,7 +136,7 @@ namespace GcRT{
             //调用回调函数
             for(int i = 0;i < batch_ctx->requests.size(); ++i){
                 auto & req = batch_ctx->requests[i];
-                req.call_back(stream, status, req.user_data);
+                req->call_back(stream, status, req->user_data);
             }
 
 

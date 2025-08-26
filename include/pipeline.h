@@ -7,12 +7,9 @@
 #include "inference_meta.h"
 
 namespace GcRT{
-    //一个流水线任务的元数据
-    typedef void (*Callback)(cudaStream_t, cudaError_t, void *);
-
     //批处理上下文
     struct BatchContext{
-        std::vector<InferenceReq> requests;
+        std::vector<InferenceReq *> requests;
         ExecutionContextMeta * context_meta;
         std::vector<void *> input_device_ptrs;
         std::vector<void *> output_device_ptrs;
@@ -28,7 +25,7 @@ namespace GcRT{
         Pipeline(int priority = 0);
         ~Pipeline();
 
-        void submit(std::vector<InferenceReq> & requests, ExecutionContextMeta * context_meta);
+        void submit(std::vector<InferenceReq *> & requests, ExecutionContextMeta * context_meta);
 
         int get_priority();
 

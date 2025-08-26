@@ -20,13 +20,16 @@ namespace GcRT{
         int _max_batch_size;
         BuildLogger _logger;
 
+        PipelineManager * _pipeline_manager = nullptr;
+
     public:
-        Engine(const std::string & model_url, int max_batch_size);
+        Engine(const std::string & model_url, int max_batch_size, PipelineManager * manager);
         ~Engine();
 
         void addRequest(Request *);
 
-        bool getBatch(int batch_size, std::vector<InferenceReq>& requests, ExecutionContextMeta * & context_meta);
+        // bool getBatch(int batch_size, std::vector<InferenceReq>& requests, ExecutionContextMeta * & context_meta);
+        void dynamicBatchHandle();
         
         void returnContext(ExecutionContextMeta * context_meta);
 

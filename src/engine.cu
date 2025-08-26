@@ -1,11 +1,17 @@
 #include "engine.h"
+#include "pipeline_manager.h"
 #include <fstream>
 
 namespace GcRT{
-    Engine::Engine(const std::string & model_url, int max_batch_size): _max_batch_size(max_batch_size), _logger(BuildLogger::Severity::kINFO){
+    Engine::Engine(const std::string & model_url, int max_batch_size, PipelineManager * manager): _max_batch_size(max_batch_size), \
+        _logger(BuildLogger::Severity::kINFO), _pipeline_manager(manager){
         assert(max_batch_size > 0);
         loadEngine(model_url);
-        createContexts(max_batch_size);
+        while(max_batch_size > 0){
+            createContexts(max_batch_size);
+            max_batch_size /= 2;
+        }
+        
     }
 
 
@@ -37,18 +43,43 @@ namespace GcRT{
         _req_size++;
     }
 
-    bool Engine::getBatch(int batch_size, std::vector<InferenceReq>& requests, ExecutionContextMeta * & context_meta){
-        if(_req_size < batch_size){
-            return false;
-        }
-        for(int i = 0; i < batch_size; i++){
-            Request * req = nullptr;
-            _req_list.tryDequeue(req);
-            if(req){
-                requests.push_back(req->getRequest());
+    void Engine::dynamicBatchHandle(){
+        //动态批处理，首先是看最上层的执行上下文有没有ExecutionMeta
+        int batch_size = _max_batch_size;
+        int current_req_size = _req_size.load();  //提前锁当前的请求量
+        
+        while(batch_size > 0){
+            while(batch_size > 0 && current_req_size < batch_size){
+                batch_size /= 2;
             }
+
+            ExecutionContextMeta * meta;
+            while(batch_size > 0 && !_free_list[batch_size].try_dequeue(meta)){
+                //push不出来，那么batch_size要减小了
+                batch_size /= 2;
+            }
+
+            if(!meta) break;  //此时还没有扔出来，就只能是batch_size == 0了，直接break;
+
+            //开始组装请求
+            _req_size.fetch_sub(batch_size);
+            current_req_size -= batch_size;
+
+            std::vector<InferenceReq *> requests;
+            for(int i = 0;i < batch_size; ++i){
+                Request * req;
+                if(_req_list.try_dequeue(req)){
+                    InferenceReq * infer_req = new InferenceReq;
+                    //TODO:具体参数组装
+                    requests.push_back(infer_req);
+                    
+                } else {
+                    std::cout << "Invalid Inner Code Error" << std::endl;
+                }
+            }
+            
+            _pipeline_manager->submit(std::move(requests), meta);
         }
-        return true;
     }
     
     void Engine::returnContext(ExecutionContextMeta * context_meta){
@@ -95,7 +126,7 @@ namespace GcRT{
             return false;
         }
         
-        _engine = std::shared_ptr<nvinfer1::ICudaEngine>(runtime->deserializeCudaEngine(engine_data.data(), size);
+        _engine = std::shared_ptr<nvinfer1::ICudaEngine>(runtime->deserializeCudaEngine(engine_data.data(), size));
         delete runtime;
         
         if (!_engine) {
