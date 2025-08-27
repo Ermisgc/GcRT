@@ -4,48 +4,10 @@
 #include <vector>
 #include <sstream>
 #include <iostream>
+#include <NvInfer.h>
 
 namespace GcRT{    
     using json = nlohmann::json;
-
-    struct ModelConfig{
-        std::string name;
-        std::string version;
-    };
-
-    struct InferenceParam{
-        int priority;
-        int timeout;
-        int max_batch_size; 
-        std::string output_format;
-    };
-
-    struct InputData{
-        std::string type;
-        std::string uri;
-    };
-
-    struct Input{
-        std::string name;
-        std::string datatype;
-        std::string data;
-        std::vector<int> shape;
-        InputData data_ref;
-    };
-
-    struct Output{
-        std::string name;
-        bool ret;
-        std::string postprocessing;
-    };
-
-    struct Request{
-        std::string _request_id;
-        ModelConfig _model_config;
-        InferenceParam _infer_param;
-        std::vector<Input> _inputs;
-        std::vector<Output> _outputs;
-    };
 
     //执行上下文与其元信息
     struct ExecutionContextMeta{
@@ -102,45 +64,6 @@ namespace GcRT{
         std::string model_path;
     };
 
-    void from_json(const json& j, ModelConfig & config){
-        j.at("name").get_to(config.name);
-        j.at("version").get_to(config.version);
-    }
-
-    void from_json(const json& j, InferenceParam & param){
-        j.at("priority").get_to(param.priority);
-        j.at("timeout").get_to(param.timeout);
-        j.at("max_batch_size").get_to(param.max_batch_size);
-        j.at("output_format").get_to(param.output_format);
-    }
-
-    void from_json(const json& j, InputData & data){
-        j.at("type").get_to(data.type);
-        j.at("uri").get_to(data.uri);
-    }
-
-    void from_json(const json& j, Input & input){
-        j.at("name").get_to(input.name);
-        j.at("datatype").get_to(input.datatype);
-        j.at("data").get_to(input.data);
-        j.at("shape").get_to(input.shape);
-        j.at("data_ref").get_to(input.data_ref);
-    }
-
-    void from_json(const json& j, Output & output){
-        j.at("name").get_to(output.name);
-        j.at("return").get_to(output.ret);
-        j.at("postprocessing").get_to(output.postprocessing);
-    }
-
-    void from_json(const json& j, Request& req) {
-        j.at("request_id").get_to(req._request_id);
-        j.at("model").get_to(req._model_config);  // 修正这里
-        j.at("parameters").get_to(req._infer_param);
-        j.at("inputs").get_to(req._inputs);
-        j.at("outputs").get_to(req._outputs);
-    }
-
     static constexpr char base64_charset_table[64] = {
         'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
         'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
@@ -157,7 +80,7 @@ namespace GcRT{
         else return 52 + input - '0';
     }
 
-    std::string base64Encoding(const std::vector<uint8_t> & input){
+    std::string base64Encoding(const std::string & input){
         std::string encoded;
         int n = input.size();
         encoded.reserve( (4 * n + 2) / 3);  //首先预留一部分空间
@@ -186,11 +109,11 @@ namespace GcRT{
             encoded.push_back('=');
         }
 
-        return encoded;
+        return encoded;  //RVO优化
     }
 
-    std::vector<uint8_t> base64Decoding(const std::string & input){
-        std::vector<uint8_t> decoded;
+    std::string base64Decoding(const std::string & input){
+        std::string decoded;
         int n = input.length();
         decoded.reserve( (3 * n + 3) / 4);  //首先预留一部分空间
 
@@ -230,7 +153,29 @@ namespace GcRT{
             decoded.pop_back();
         }
 
-        return decoded;
+        return decoded;  //NVO优化
+    }
+
+    nvinfer1::DataType string2Datatype(const std::string & input){
+        if(input == "FP32") return nvinfer1::DataType::kFLOAT;
+        else if(input == "INT32") return nvinfer1::DataType::kINT32;
+        else if(input == "FP16") return nvinfer1::DataType::kHALF;
+        else if(input == "INT8") return nvinfer1::DataType::kINT8;
+        else if(input == "UINT8") return nvinfer1::DataType::kUINT8;
+        else if(input == "BOOL") return nvinfer1::DataType::kBOOL;
+        else if(input == "INT64") return nvinfer1::DataType::kINT64;
+        else return nvinfer1::DataType::kINT32;
+    }
+
+    std::string datatype2String(nvinfer1::DataType type){
+        if(type == nvinfer1::DataType::kFLOAT) return "FP32";
+        else if(type == nvinfer1::DataType::kINT32) return "INT32";
+        else if(type == nvinfer1::DataType::kHALF) return "FP16";
+        else if(type == nvinfer1::DataType::kINT8) return "INT8";
+        else if(type == nvinfer1::DataType::kUINT8) return "UINT8";
+        else if(type == nvinfer1::DataType::kBOOL) return "BOOL";
+        else if(type == nvinfer1::DataType::kINT64) return "INT64";
+        else return "INT32";
     }
 
 }

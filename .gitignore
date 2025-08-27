@@ -14,7 +14,7 @@
 
 !test/*
 
-!api.json
+!json/*
 
 !autobuild.sh
 
