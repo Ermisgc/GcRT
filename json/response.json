@@ -1,0 +1,18 @@
+{
+    "model_id" : "resnet50",
+    "request_id": "123456",
+
+    "outputs" :[
+        {
+            "name" : "scores",
+            "shape": [1, 1000],
+            "datatype" : "FP32",
+            "data": "x12x12x123"
+        }
+    ],
+    "parameters":{
+        "inference_time" : 4520
+    },
+    "error_code": 0,
+    "error_message": ""
+}

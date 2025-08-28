@@ -1,3 +1,4 @@
+#pragma once
 #include <NvInfer.h>
 #include <string>
 #include "json.hpp"

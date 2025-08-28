@@ -5,6 +5,10 @@
 #include <sstream>
 #include <iostream>
 #include <NvInfer.h>
+#include "network/request.h"
+#include "network/response.h"
+#include "network/manager_response.h"
+#include "network/manager_request.h"
 
 namespace GcRT{    
     using json = nlohmann::json;
@@ -35,6 +39,8 @@ namespace GcRT{
 
         std::vector<void *> h_output_buffer;
         std::vector<size_t> output_sizes;
+
+        std::string request_id;
 
         //执行任务的回调函数
         Callback call_back;
@@ -178,4 +184,19 @@ namespace GcRT{
         else return "INT32";
     }
 
+    ManagementOp string2ManagementOp(const std::string & input){
+        if(input == "LOAD") return ManagementOp::LOAD;
+        else if(input == "UNLOAD") return ManagementOp::UNLOAD;
+        else if(input == "INFER") return ManagementOp::INFER;
+        else if(input == "QUERY") return ManagementOp::QUERY;
+        else return ManagementOp::UNKNOWN;
+    }
+
+    std::string managementOp2String(ManagementOp op){
+        if(op == ManagementOp::LOAD) return "LOAD";
+        else if(op == ManagementOp::UNLOAD) return "UNLOAD";
+        else if(op == ManagementOp::INFER) return "INFER";
+        else if(op == ManagementOp::QUERY) return "QUERY";
+        else return "UNKNOWN";
+    }
 }

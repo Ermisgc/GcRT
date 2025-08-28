@@ -47,7 +47,6 @@ namespace GcRT{
             _res->body() = "Only POST method is allowed for common user";
             _res->prepare_payload();
             return;
-            // return res;
         }
 
         if(_req.target() != "/infer") {    //URL不是以infer开头
@@ -58,7 +57,6 @@ namespace GcRT{
             _res->body() = "The target is an invalid path";
             _res->prepare_payload();
             return;
-            // return res;                
         }
 
         handle_inference();
@@ -109,7 +107,6 @@ namespace GcRT{
         if(ec) return fail(ec, "write");
         if(! keep_alive) return do_close();
 
-        // Read another request
         do_read();
     }
     

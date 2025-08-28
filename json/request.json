@@ -1,0 +1,32 @@
+{
+  "model_id": "resnet50",
+  "request_id": "123456",
+  "inputs": [
+    {
+      "name": "images",
+      "shape": [1, 3, 224, 224],
+      "datatype": "FP32",
+      "data": "x12x12x123"
+    },
+    {
+      "name" : "images",
+      "shape": [1, 3, 224, 224],
+      "datatype" : "FP32",
+      "data_ref": {
+        "type": "s3",
+        "uri": "s3://bucket/path/to/image.bin"
+      }
+    }
+  ],
+  "returns": [
+    {
+      "name": "scores",
+      "postprocessing": "softmax"
+    }
+  ],
+
+  "parameters": {
+    "priority": 2,
+    "timeout": 5000
+  }
+}

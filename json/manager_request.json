@@ -1,0 +1,9 @@
+{
+  "operation": "load", 
+  "model_id": "resnet50",
+  "model_path": "/models/resnet50.engine",
+  "batch_sizes": [1, 2, 4, 8],
+  "parameters": {
+    "priority": 0
+  }
+}

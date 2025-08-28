@@ -1,0 +1,7 @@
+{
+  "operation": "load",
+  "model_id": "resnet50",
+  "success": true,
+  "message": "Model loaded successfully",
+  "error_code": 0
+}
